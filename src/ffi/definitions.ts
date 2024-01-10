@@ -29,6 +29,9 @@ export const setupDefinitions = () => {
     reserved: "EdsUInt32",
   });
 
+  // Camera commands
+  const EdsCameraCommand = koffi.alias("EdsCameraCommand", "EdsUInt32");
+
   return {
     EdsInt32,
     EdsUInt32,
@@ -46,5 +49,7 @@ export const setupDefinitions = () => {
     EdsEvfImageRef,
 
     EdsDeviceInfo,
+
+    EdsCameraCommand,
   };
 };

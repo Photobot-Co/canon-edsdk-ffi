@@ -2,6 +2,9 @@ import { EdsDeviceInfo, getFfi, makeArrayPointer } from "./ffi";
 import { CameraInfo, CameraModule } from "./types";
 
 const EDS_ERR_OK = 0;
+const EDS_CAMERA_COMMAND_PRESS_SHUTTER_BUTTON = 0x00000004;
+const EDS_CAMERA_COMMAND_SHUTTER_BUTTON_OFF = 0x00000000;
+const EDS_CAMERA_COMMAND_SHUTTER_BUTTON_COMPLETELY = 0x00000003;
 
 /**
  * Do the actual loading of the library
@@ -17,6 +20,9 @@ export const loadInternal = async (): Promise<
   if (initResult !== EDS_ERR_OK) {
     throw new Error(`Unable to initialize the EDSDK. Result: ${initResult}`);
   }
+
+  // This will store the references to the open cameras so they can be used later
+  const openCameraRefs = new Map<string, unknown>();
 
   /**
    * List the cameras that are currently connected
@@ -75,13 +81,92 @@ export const loadInternal = async (): Promise<
         cameraRef,
       });
     }
+
+    // Release the camera list
+    ffi.EdsRelease(list);
+
+    // Return the camera list
     return cameras;
+  };
+
+  /**
+   * Opens a connection to a camera
+   */
+  const openAsync = async (cameraInfo: CameraInfo): Promise<void> => {
+    // If the camera is already open then just return as there's nothing to do
+    if (openCameraRefs.has(cameraInfo.portName)) {
+      return;
+    }
+
+    // Open the camera session
+    const openSessionResult = await ffi.EdsOpenSession(cameraInfo.cameraRef);
+    if (openSessionResult !== EDS_ERR_OK) {
+      throw new Error(
+        `Unable to open camera session. Result: ${openSessionResult}`,
+      );
+    }
+
+    // Store an instance of the camera
+    openCameraRefs.set(cameraInfo.portName, cameraInfo.cameraRef);
+  };
+
+  /**
+   * Closes the connection to the camera
+   */
+  const closeAsync = async (cameraInfo: CameraInfo): Promise<boolean> => {
+    // Get the open camera reference, returning early if the camera is already closed
+    const camera = openCameraRefs.get(cameraInfo.portName);
+    if (!camera) {
+      return false;
+    }
+
+    // Exit the camera
+    await ffi.EdsCloseSession(camera);
+
+    // Release the camera ref
+    ffi.EdsRelease(cameraInfo.cameraRef);
+
+    // Remove the camera from the open ref map
+    openCameraRefs.delete(cameraInfo.portName);
+
+    // Return true to show we closed the camera
+    return true;
+  };
+
+  /**
+   * Trigger a capture on the given camera
+   */
+  const triggerCaptureAsync = async (cameraInfo: CameraInfo): Promise<void> => {
+    // Get the open camera reference, throwing an error if not open
+    const camera = openCameraRefs.get(cameraInfo.portName);
+    if (!camera) {
+      throw new Error(
+        `Camera must be opened before attempting to trigger a capture`,
+      );
+    }
+
+    // Press the shutter button down completely
+    await ffi.EdsSendCommand(
+      camera,
+      EDS_CAMERA_COMMAND_PRESS_SHUTTER_BUTTON,
+      EDS_CAMERA_COMMAND_SHUTTER_BUTTON_COMPLETELY,
+    );
+
+    // Un-press the shutter button
+    await ffi.EdsSendCommand(
+      camera,
+      EDS_CAMERA_COMMAND_PRESS_SHUTTER_BUTTON,
+      EDS_CAMERA_COMMAND_SHUTTER_BUTTON_OFF,
+    );
   };
 
   // Return the methods and raw ffi
   return {
     ffi,
     listAsync,
+    openAsync,
+    closeAsync,
+    triggerCaptureAsync,
   };
 };
 

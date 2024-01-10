@@ -63,6 +63,28 @@ export const setupFunctions = (edsdk: koffi.IKoffiLib) => {
     "EdsError EdsGetDeviceInfo(EdsCameraRef inCameraRef, _Out_ EdsDeviceInfo* outDeviceInfo)",
   );
 
+  /**
+   * Establishes a logical connection with a remote camera.
+   * Use this API after getting the camera's EdsCamera object.
+   */
+  const EdsOpenSession = edsdk.func(
+    "EdsError EdsOpenSession(EdsCameraRef inCameraRef)",
+  );
+
+  /**
+   * Closes a logical connection with a remote camera.
+   */
+  const EdsCloseSession = edsdk.func(
+    "EdsError EdsCloseSession(EdsCameraRef inCameraRef)",
+  );
+
+  /**
+   * Sends a command such as "Shoot" to a remote camera.
+   */
+  const EdsSendCommand = edsdk.func(
+    "EdsError EdsSendCommand(EdsCameraRef inCameraRef, EdsCameraCommand inCommand, EdsInt32 inParam)",
+  );
+
   return {
     EdsInitializeSDK,
     EdsTerminateSDK,
@@ -71,5 +93,8 @@ export const setupFunctions = (edsdk: koffi.IKoffiLib) => {
     EdsGetChildCount,
     EdsGetChildAtIndex,
     EdsGetDeviceInfo,
+    EdsOpenSession,
+    EdsCloseSession,
+    EdsSendCommand,
   };
 };
