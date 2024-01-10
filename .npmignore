@@ -1,0 +1,5 @@
+.husky/
+.vscode/
+src/
+test.ts
+*.config.js
