@@ -6,6 +6,8 @@ export interface CameraInfo {
 }
 
 export interface CameraModule {
+  startEventLoop(): void;
+  stopEventLoop(): void;
   listAsync(): Promise<CameraInfo[]>;
   openAsync(cameraInfo: CameraInfo): Promise<void>;
   closeAsync(cameraInfo: CameraInfo): Promise<boolean>;

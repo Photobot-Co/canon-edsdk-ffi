@@ -1,12 +1,14 @@
 import inquirer from "inquirer";
 import PressToContinuePrompt from "inquirer-press-to-continue";
 import type { KeyDescriptor } from "inquirer-press-to-continue";
-import { load } from "./src";
+import { loadEdsdk, unloadEdsdk } from "./src";
 
 inquirer.registerPrompt("press-to-continue", PressToContinuePrompt);
 
 async function main() {
-  const edsdk = await load();
+  const edsdk = await loadEdsdk();
+  edsdk.startEventLoop();
+
   const cameras = await edsdk.listAsync();
   console.log("Got cameras", cameras);
 
@@ -27,10 +29,17 @@ async function main() {
     await edsdk.triggerCaptureAsync(cameraInfo);
     console.log("Captured");
 
+    console.log("Waiting for 5 seconds");
+    for (let i = 0; i < 50; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
     console.log("Closing...");
     await edsdk.closeAsync(cameraInfo);
     console.log("Closed");
   }
+
+  await unloadEdsdk();
 }
 
 main();
