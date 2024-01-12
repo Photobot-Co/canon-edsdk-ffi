@@ -1,3 +1,3 @@
 module.exports = {
-  "*.{js,ts,tsx}": ["yarn eslint --fix"],
+  "*.{js,ts,tsx}": ["npx eslint --fix"],
 };

@@ -1,8 +1,11 @@
+import type { getFfi } from "./ffi";
+
+export type EdsdkFfi = ReturnType<typeof getFfi>;
+
 export interface CameraInfo {
   portName: string;
   deviceDescription: string;
   deviceSubType: number;
-  cameraRef: unknown;
 }
 
 export interface CameraModule {

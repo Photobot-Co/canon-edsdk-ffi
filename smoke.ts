@@ -7,7 +7,6 @@ inquirer.registerPrompt("press-to-continue", PressToContinuePrompt);
 
 async function main() {
   const edsdk = await loadEdsdk();
-  edsdk.startEventLoop();
 
   const cameras = await edsdk.listAsync();
   console.log("Got cameras", cameras);
