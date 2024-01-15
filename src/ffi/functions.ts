@@ -105,6 +105,13 @@ export const setupFunctions = (edsdk: koffi.IKoffiLib) => {
   );
 
   /**
+   * Gets property information from the object designated in inRef.
+   */
+  const EdsGetPropertyData = edsdk.func(
+    "EdsError EdsGetPropertyData(EdsBaseRef inRef, EdsPropertyID inPropertyID, EdsInt32 inParam, EdsUInt32 inPropertySize, _Out_ EdsUInt32* inPropertyData)",
+  );
+
+  /**
    * Sets property data for the object designated in inRef.
    */
   const EdsSetPropertyData = edsdk.func(
@@ -196,6 +203,7 @@ export const setupFunctions = (edsdk: koffi.IKoffiLib) => {
     EdsSetCapacity,
     EdsGetDeviceInfo,
     EdsGetPropertySize,
+    EdsGetPropertyData,
     EdsSetPropertyData,
     EdsOpenSession,
     EdsCloseSession,

@@ -67,13 +67,17 @@ export class CameraModule {
         inParam: number,
         _inContext: unknown,
       ) => {
-        console.log(
-          `Property event - inEvent: 0x${inEvent.toString(
-            16,
-          )} - inPropertyID: 0x${inPropertyID.toString(
-            16,
-          )} - inParam: 0x${inParam.toString(16)}`,
-        );
+        this._getPropertyValue(inPropertyID, inParam).then((value) => {
+          console.log(
+            `Property event - inEvent: 0x${inEvent.toString(
+              16,
+            )} - inPropertyID: 0x${inPropertyID.toString(
+              16,
+            )} - inParam: 0x${inParam.toString(16)} - Value: 0x${value.toString(
+              16,
+            )}`,
+          );
+        });
         return EDS_ERR_OK;
       },
       koffi.pointer(this.ffi.definitions.EdsPropertyEventHandler),
@@ -345,5 +349,30 @@ export class CameraModule {
 
     // Return success
     return true;
+  }
+
+  private async _getPropertyValue(
+    property: number,
+    param: number,
+  ): Promise<number> {
+    const dataTypePointer = makeArrayPointer();
+    const dataSizePointer = makeArrayPointer();
+    await this.ffi.EdsGetPropertySize(
+      this._cameraRef,
+      property,
+      param,
+      dataTypePointer,
+      dataSizePointer,
+    );
+
+    const valuePointer = makeArrayPointer();
+    await this.ffi.EdsGetPropertyData(
+      this._cameraRef,
+      property,
+      param,
+      dataSizePointer[0],
+      koffi.as(valuePointer, koffi.pointer(this.ffi.definitions.EdsUInt32)),
+    );
+    return valuePointer[0] as number;
   }
 }
