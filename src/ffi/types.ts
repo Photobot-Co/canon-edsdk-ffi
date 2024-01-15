@@ -4,3 +4,13 @@ export interface EdsDeviceInfo {
   deviceSubType: number;
   reserved: number;
 }
+
+export interface EdsDirectoryItemInfo {
+  size: number;
+  isFolder: boolean;
+  groupID: number;
+  option: number;
+  szFileName: string;
+  format: number;
+  dateTime: number;
+}

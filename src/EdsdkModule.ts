@@ -1,10 +1,10 @@
 import { EdsDeviceInfo, makeArrayPointer } from "./ffi";
-import { EdsdkFfi, CameraInfo } from "./types";
+import { EdsdkFfi, CameraInfo, CameraNewImage } from "./types";
 import { CameraModule } from "./CameraModule";
 import { EDS_ERR_OK } from "./constants";
 
 // How often to call the EdsGetEvent method to trigger events to be passed through
-const EVENT_LOOP_INTERVAL_MS = 10;
+const EVENT_LOOP_INTERVAL_MS = 1;
 
 export class EdsdkModule {
   // This will store the references to the open cameras so they can be used later using the port number as a key
@@ -115,7 +115,7 @@ export class EdsdkModule {
   /**
    * Trigger a capture on the given camera
    */
-  public async triggerCaptureAsync(cameraInfo: CameraInfo): Promise<void> {
+  public triggerCaptureAsync(cameraInfo: CameraInfo): Promise<void> {
     // Get the open camera reference, throwing an error if not open
     const camera = this._openCameras.get(cameraInfo.portName);
     if (!camera) {
@@ -124,7 +124,25 @@ export class EdsdkModule {
       );
     }
 
-    await camera.triggerCaptureAsync();
+    return camera.triggerCaptureAsync();
+  }
+
+  /**
+   * Add a listener for new images from the camera
+   */
+  public addNewImageListener(
+    cameraInfo: CameraInfo,
+    listener: (newImage: CameraNewImage) => void,
+  ): () => void {
+    // Get the open camera reference, throwing an error if not open
+    const camera = this._openCameras.get(cameraInfo.portName);
+    if (!camera) {
+      throw new Error(
+        `Camera must be opened before attempting to add a new image listener`,
+      );
+    }
+
+    return camera.addNewImageListener(listener);
   }
 
   /**

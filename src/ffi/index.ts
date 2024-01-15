@@ -4,6 +4,7 @@ import { setupFunctions } from "./functions";
 
 const POSSIBLE_EDSDK_PATHS = [
   "EDSDK",
+  "vendor/libEDSDK.so",
   "vendor/EDSDK.framework/EDSDK",
   "/opt/homebrew/lib/EDSDK",
   "/usr/local/lib/EDSDK",

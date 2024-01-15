@@ -1,4 +1,12 @@
 import koffi from "koffi";
+import promisify from "util.promisify";
+
+// Creates a function with the given def which returns a promise
+const createAsyncFunc = (lib: koffi.IKoffiLib, def: string) => {
+  const func = lib.func(def);
+  return (...args: unknown[]): Promise<unknown> =>
+    promisify(func.async)(...args);
+};
 
 export const setupFunctions = (edsdk: koffi.IKoffiLib) => {
   /**
@@ -121,8 +129,56 @@ export const setupFunctions = (edsdk: koffi.IKoffiLib) => {
   /**
    * Sends a command such as "Shoot" to a remote camera.
    */
-  const EdsSendCommand = edsdk.func(
+  const EdsSendCommand = createAsyncFunc(
+    edsdk,
     "EdsError EdsSendCommand(EdsCameraRef inCameraRef, EdsCameraCommand inCommand, EdsInt32 inParam)",
+  );
+
+  /**
+   * Gets information about the directory or file objects on the memory card (volume) in a remote camera.
+   */
+  const EdsGetDirectoryItemInfo = edsdk.func(
+    "EdsError EdsGetDirectoryItemInfo(EdsDirectoryItemRef inDirItemRef, _Out_ EdsDirectoryItemInfo* outDirItemInfo)",
+  );
+
+  /**
+   * Creates a new file on a host computer (or opens an existing file) and creates a
+   * file stream for access to the file.
+   *
+   * If a new file is designated before executing this API, the file is actually created
+   * following the timing of writing by means of EdsWrite or the like with respect to an open stream.
+   */
+  const EdsCreateFileStream = edsdk.func(
+    "EdsError EdsCreateFileStream(const EdsChar* inFileName, EdsFileCreateDisposition inCreateDisposition, EdsAccess inDesiredAccess, _Out_ EdsStreamRef* outStream)",
+  );
+
+  /**
+   * Downloads a file on a remote camera (in the camera memory or on a memory card) to the host computer.
+   * The downloaded file is sent directly to a file stream created in advance.
+   * When dividing the file being retrieved, call this API repeatedly.
+   * Also in this case, make the data block size a multiple of 512 (bytes), excluding the final block.
+   */
+  const EdsDownload = edsdk.func(
+    "EdsError EdsDownload(EdsDirectoryItemRef inDirItemRef, EdsUInt64 inReadSize, _Out_ EdsStreamRef outStream)",
+  );
+
+  /**
+   * Must be called when downloading of directory items is complete.
+   * Executing this API makes the camera recognize that file transmission is complete.
+   * This operation need not be executed when using EdsDownloadThumbnail.
+   */
+  const EdsDownloadComplete = edsdk.func(
+    "EdsError EdsDownloadComplete(EdsDirectoryItemRef inDirItemRef)",
+  );
+
+  /**
+   * Must be executed when downloading of a directory item is canceled.
+   * Calling this API makes the camera cancel file transmission.
+   * It also releases resources.
+   * This operation need not be executed when using EdsDownloadThumbnail.
+   */
+  const EdsDownloadCancel = edsdk.func(
+    "EdsError EdsDownloadCancel(EdsDirectoryItemRef inDirItemRef)",
   );
 
   return {
@@ -144,5 +200,10 @@ export const setupFunctions = (edsdk: koffi.IKoffiLib) => {
     EdsOpenSession,
     EdsCloseSession,
     EdsSendCommand,
+    EdsGetDirectoryItemInfo,
+    EdsCreateFileStream,
+    EdsDownload,
+    EdsDownloadComplete,
+    EdsDownloadCancel,
   };
 };

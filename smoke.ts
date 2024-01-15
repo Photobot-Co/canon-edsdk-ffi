@@ -17,6 +17,10 @@ async function main() {
     await edsdk.openAsync(cameraInfo);
     console.log("Opened");
 
+    edsdk.addNewImageListener(cameraInfo, (newImage) => {
+      console.log("New image!", newImage);
+    });
+
     await inquirer.prompt<{ key: KeyDescriptor }>({
       name: "key",
       type: "press-to-continue",
